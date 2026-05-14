@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Participants Tombola - La Caisse Évènements</title>
+    <!-- On garde le CDN, mais on ajoute un style de secours au cas où il serait bloqué -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #6366f1; /* Couleur unie de secours */
             background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
             min-height: 100vh;
             display: flex;
@@ -42,7 +44,6 @@
             transform: rotateY(180deg);
         }
 
-        /* Gestion de la visibilité des faces */
         .flip-card-front, .flip-card-back {
             position: absolute;
             width: 100%;
@@ -52,26 +53,22 @@
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            /* Couleur de fond identique pour les deux faces */
+            background: #7c3aed;
             background: linear-gradient(135deg, #7c3aed, #db2777); 
         }
 
-        /* Face Participants - Recto */
         .flip-card-front {
             z-index: 2;
             display: flex;
             flex-direction: column;
-            transition: opacity 0.4s ease;
         }
 
-        /* Face Lots - Verso */
         .flip-card-back {
             transform: rotateY(180deg);
             display: flex;
             flex-direction: column;
         }
 
-        /* Désactivation visuelle totale du recto quand on est sur le verso */
         .flip-card.is-flipped .flip-card-front {
             opacity: 0;
             pointer-events: none;
@@ -87,10 +84,11 @@
         /* --- Ticker Animation --- */
         .ticker-container {
             width: 100%;
-            height: 400px;
+            height: 380px;
             overflow: hidden;
             position: relative;
             mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(transparent, black 15%, black 85%, transparent);
         }
 
         .ticker-wrapper {
@@ -99,17 +97,13 @@
             animation: scroll-up 20s linear infinite;
         }
 
-        .ticker-wrapper:hover {
-            animation-play-state: paused;
-        }
-
         @keyframes scroll-up {
             0% { transform: translateY(0); }
             100% { transform: translateY(-50%); }
         }
 
         .participant-item, .prize-item {
-            padding: 15px;
+            padding: 12px 15px;
             margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
@@ -125,16 +119,21 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-weight: 800;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            display: flex;
             gap: 15px;
             width: 100%;
             max-width: 672px;
             margin-bottom: 20px;
+        }
+
+        .stats-card {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 1rem;
         }
 
         .loader {
@@ -162,224 +161,146 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             z-index: 100;
-        }
-
-        .btn-toggle:hover {
-            transform: translateY(-2px);
-            background: #f8fafc;
+            border: none;
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="text-center mb-12">
-        <h1 class="text-3xl md:text-5xl font-extrabold uppercase tracking-tighter mb-2 text-white">Grande Tombola !</h1>
-        <p class="text-lg opacity-90 text-white">La Caisse Évènements</p>
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">Grande Tombola !</h1>
+        <p style="font-size: 1.125rem; opacity: 0.9;">La Caisse Évènements</p>
     </div>
 
-    <!-- Statistiques Globales -->
+    <!-- Statistiques -->
     <div class="stats-grid">
-        <div class="glass-card-header p-4 text-center rounded-2xl">
-            <p class="text-xs uppercase opacity-70">Participants</p>
-            <h2 id="total-participants" class="text-2xl font-bold">0</h2>
+        <div class="glass-card-header stats-card">
+            <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.7;">Participants</p>
+            <h2 id="total-participants" style="font-size: 1.5rem; font-weight: 700;">...</h2>
         </div>
-        <div class="glass-card-header p-4 text-center rounded-2xl">
-            <p class="text-xs uppercase opacity-70">Tickets Vendus</p>
-            <h2 id="total-tickets" class="text-2xl font-bold">0</h2>
+        <div class="glass-card-header stats-card">
+            <p style="font-size: 0.75rem; text-transform: uppercase; opacity: 0.7;">Tickets Vendus</p>
+            <h2 id="total-tickets" style="font-size: 1.5rem; font-weight: 700;">...</h2>
         </div>
     </div>
 
     <!-- Conteneur Pivotant -->
-    <div class="relative w-full max-w-2xl mt-4">
+    <div style="position: relative; width: 100%; max-width: 42rem; margin-top: 1rem;">
         
-        <!-- Bouton de basculement -->
         <button onclick="toggleFlip()" class="btn-toggle">
             <span id="btn-text">🎁 Voir les lots</span>
-            <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg>
         </button>
 
         <div id="main-card" class="flip-card">
             <div class="flip-card-inner">
                 
                 <!-- FACE RECTO : PARTICIPANTS -->
-                <div class="flip-card-front p-6 shadow-2xl">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <div class="flip-card-front" style="padding: 1.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         <span>👥</span> Participants en direct
                     </h3>
                     
-                    <div id="loading" class="flex flex-col items-center justify-center flex-grow">
+                    <div id="loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1;">
                         <div class="loader"></div>
+                        <p style="margin-top: 1rem; font-size: 0.875rem; opacity: 0.7;">Chargement des données...</p>
                     </div>
 
-                    <div id="content" class="hidden flex-grow">
+                    <div id="content" style="display: none; flex-grow: 1;">
                         <div class="ticker-container">
-                            <div id="ticker-list" class="ticker-wrapper">
-                                <!-- JS insert ici -->
-                            </div>
+                            <div id="ticker-list" class="ticker-wrapper"></div>
                         </div>
                     </div>
                     
-                    <div id="empty-state" class="hidden text-center py-20 flex-grow">
+                    <div id="empty-state" style="display: none; text-align: center; padding: 5rem 0; flex-grow: 1;">
                         <p>Aucun participant pour le moment.</p>
                     </div>
                 </div>
 
                 <!-- FACE VERSO : LOTS -->
-                <div class="flip-card-back p-6 text-left shadow-2xl">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <div class="flip-card-back" style="padding: 1.5rem; text-align: left;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                         <span>🎁</span> Liste des lots à gagner
                     </h3>
                     
-                    <div class="overflow-y-auto pr-2 flex-grow custom-scrollbar">
-                        <!-- SECTION DES LOTS -->
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🥇</span>
-                                <span class="font-semibold">2 Repas au château d'Origny</span>
-                            </div>
-                            <span class="prize-badge">Lot n°1</span>
-                        </div>
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🥈</span>
-                                <span class="font-semibold">Bâpteme de l'air avion</span>
-                            </div>
-                            <span class="prize-badge">Lot n°2</span>
-                        </div>
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🥉</span>
-                                <span class="font-semibold">Nuit insolite "cabane"</span>
-                            </div>
-                            <span class="prize-badge">Lot n°3</span>
-                        </div>
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Session de karting</span>
-                            </div>
-                            <span class="prize-badge">Lot n°4</span>
-                        </div>
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Repas "Les Docks"</span>
-                            </div>
-                            <span class="prize-badge">Lot n°5</span>
-                        </div>
-                        <div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Le Cado' de Nico</span>
-                            </div>
-                            <span class="prize-badge">Lot n°6</span>
-                        </div>
-						<div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Bons d'achat</span>
-                            </div>
-                            <span class="prize-badge">Lot n°7</span>
-                        </div>
-						<div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Coffret de vins</span>
-                            </div>
-                            <span class="prize-badge">Lot n°8</span>
-                        </div>
-						<div class="prize-item">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🎁</span>
-                                <span class="font-semibold">Les surprises de Cédric</span>
-                            </div>
-                            <span class="prize-badge">Lot n°9</span>
-                        </div>
+                    <div style="overflow-y: auto; flex-grow: 1;" class="custom-scrollbar">
+                        <div class="prize-item"><span>🥇 2 Repas au château d'Origny</span><span class="prize-badge">Lot 1</span></div>
+                        <div class="prize-item"><span>🥈 Bâpteme de l'air avion</span><span class="prize-badge">Lot 2</span></div>
+                        <div class="prize-item"><span>🥉 Nuit insolite "cabane"</span><span class="prize-badge">Lot 3</span></div>
+                        <div class="prize-item"><span>🎁 Session de karting</span><span class="prize-badge">Lot 4</span></div>
+                        <div class="prize-item"><span>🎁 Repas "Les Docks"</span><span class="prize-badge">Lot 5</span></div>
+                        <div class="prize-item"><span>🎁 Le Cado' de Nico</span><span class="prize-badge">Lot 6</span></div>
+                        <div class="prize-item"><span>🎁 Bons d'achat</span><span class="prize-badge">Lot 7</span></div>
+                        <div class="prize-item"><span>🎁 Coffret de vins</span><span class="prize-badge">Lot 8</span></div>
+                        <div class="prize-item"><span>🎁 Les surprises de Cédric</span><span class="prize-badge">Lot 9</span></div>
                     </div>
-                    
-                    <p class="mt-4 text-xs opacity-80 text-center italic">
-                        Le tirage au sort aura lieu très prochainement !
-                    </p>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <p class="mt-8 text-sm opacity-60 italic text-center text-white">
-        Dernière mise à jour : <span id="last-update">-</span>
-    </p>
-    <p class="mt-3 text-sm opacity-60 italic text-center font-semibold text-white">
-        <a href="https://sites.google.com/view/caissevenements/accueil">
-		Retour à l'accueil de notre site internet
-		</a>
-    </p>
+    <div style="margin-top: 2rem; text-align: center; font-size: 0.875rem; opacity: 0.6;">
+        <p>Dernière mise à jour : <span id="last-update">-</span></p>
+        <p style="margin-top: 0.75rem; font-weight: 600;">
+            <a href="https://sites.google.com/view/caissevenements/accueil" style="color: white; text-decoration: underline;">Retour à l'accueil</a>
+        </p>
+    </div>
 
     <script>
-        // --- CONFIGURATION ---
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTtcRF7DoO2WE_D2LhpeE7USLIWIdvvYgWxNHCZxT4E0ckN8ZB3kA4HvMY3ZJ7rCkNfsJs7OGiZbh0e/pub?gid=501297268&single=true&output=csv"; 
         
         const MOCK_DATA = [
             {email: "a@a.com", nom: "HABIB", prenom: "Lebnan", tickets: 5},
-            {email: "test@test.com", nom: "DUFOUR", prenom: "Marie", tickets: 12},
-            {email: "f@f.com", nom: "LEROY", prenom: "Jean", tickets: 5},
-            {email: "f@f.com", nom: "LEROY", prenom: "Emma", tickets: 8},
-            {email: "test@test.com", nom: "DUFOUR", prenom: "Marie", tickets: 10}
+            {email: "test@test.com", nom: "DUFOUR", prenom: "Marie", tickets: 12}
         ];
 
         function toggleFlip() {
             const card = document.getElementById('main-card');
             const btnText = document.getElementById('btn-text');
             const isFlipped = card.classList.toggle('is-flipped');
-            
             btnText.innerText = isFlipped ? "👥 Voir les participants" : "🎁 Voir les lots";
         }
 
         async function fetchData() {
-            try {
-                let rawParticipants = [];
-                if (SHEET_CSV_URL === "URL_DE_VOTRE_FEUILLE_CSV") {
-                    rawParticipants = MOCK_DATA;
-                } else {
-                    const response = await fetch(SHEET_CSV_URL);
-                    const data = await response.text();
-                    rawParticipants = parseCSV(data);
+            // Sécurité : masquer le loader après 6 secondes quoi qu'il arrive
+            setTimeout(() => {
+                if(document.getElementById('content').style.display === 'none' && document.getElementById('empty-state').style.display === 'none') {
+                    showErrorState();
                 }
+            }, 6000);
+
+            try {
+                const response = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.text();
+                const rawParticipants = parseCSV(data);
 
                 const grouped = groupParticipants(rawParticipants);
                 renderParticipants(grouped);
                 updateStats(grouped);
                 
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('content').classList.remove('hidden');
+                hideLoader();
                 document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
 
             } catch (error) {
-                console.error("Erreur:", error);
-                const groupedMock = groupParticipants(MOCK_DATA);
-                renderParticipants(groupedMock);
-                updateStats(groupedMock);
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('content').classList.remove('hidden');
+                console.error("Fetch error, using mocks:", error);
+                showErrorState();
             }
         }
 
         function parseCSV(csvText) {
-            const lines = csvText.split('\n');
+            const lines = csvText.split(/\r?\n/);
             const result = [];
             for (let i = 1; i < lines.length; i++) {
+                // Regex robuste pour gérer les virgules dans les champs entre guillemets
                 const columns = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 if (columns.length >= 5) {
-                    const email = columns[1]?.trim().toLowerCase() || "";
-                    const nom = columns[2]?.trim() || "";
-                    const prenom = columns[3]?.trim() || "";
+                    const email = columns[1]?.replace(/"/g, '').trim().toLowerCase() || "";
+                    const nom = columns[2]?.replace(/"/g, '').trim() || "";
+                    const prenom = columns[3]?.replace(/"/g, '').trim() || "";
                     const tickets = parseInt(columns[4]) || 0;
                     if (prenom !== "" && tickets > 0) {
                         result.push({ email, nom, prenom, tickets });
@@ -409,35 +330,49 @@
         function renderParticipants(list) {
             const container = document.getElementById('ticker-list');
             if (list.length === 0) {
-                document.getElementById('content').classList.add('hidden');
-                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('content').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'block';
                 return;
             }
             const sortedList = list.sort((a, b) => b.tickets - a.tickets);
+            // On duplique la liste pour l'effet de défilement infini
             const displayList = [...sortedList, ...sortedList];
             
             container.innerHTML = displayList.map((p) => `
                 <div class="participant-item">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold border border-white/40">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid rgba(255,255,255,0.4);">
                             ${p.prenom.charAt(0)}
                         </div>
-                        <span class="font-semibold text-lg text-left">${p.prenom} ${p.nom}</span>
+                        <span style="font-weight: 600; font-size: 1.125rem;">${p.prenom} ${p.nom}</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="ticket-badge">${p.tickets}</span>
-                    </div>
+                    <span class="ticket-badge">${p.tickets}</span>
                 </div>
             `).join('');
 
-            const duration = Math.max(12, list.length * 3);
+            const duration = Math.max(10, list.length * 2.5);
             container.style.animationDuration = `${duration}s`;
+            
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
         }
 
         function updateStats(list) {
             const totalTickets = list.reduce((sum, p) => sum + p.tickets, 0);
             document.getElementById('total-participants').innerText = list.length;
             document.getElementById('total-tickets').innerText = totalTickets;
+        }
+
+        function hideLoader() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showErrorState() {
+            hideLoader();
+            const groupedMock = groupParticipants(MOCK_DATA);
+            renderParticipants(groupedMock);
+            updateStats(groupedMock);
+            document.getElementById('last-update').innerText = "Mode déconnecté (Proxy bloqué)";
         }
 
         window.onload = fetchData;
